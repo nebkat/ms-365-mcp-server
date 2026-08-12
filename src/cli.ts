@@ -53,7 +53,7 @@ program
   )
   .option(
     '--preset <names>',
-    'Use preset tool categories (comma-separated). Available: mail, calendar, files, personal, work, excel, contacts, tasks, onenote, search, users, outlook, onedrive, teams, teams-write, all'
+    'Use preset tool categories (comma-separated). Available: mail, mail-read, mail-read-draft, mail-draft, mail-draft-send, mail-send, calendar, files, personal, work, excel, contacts, tasks, onenote, search, users, outlook, onedrive, teams, teams-write, all'
   )
   .option('--list-presets', 'List all available presets and exit')
   .option('--list-permissions', 'List all required Graph API permissions and exit')

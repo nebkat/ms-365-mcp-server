@@ -7,6 +7,8 @@ export interface ToolCategory {
   pattern: RegExp;
   description: string;
   requiresOrgMode?: boolean;
+  /** Send-only presets exclude the universal byte readers (download-bytes etc.). */
+  omitUniversalUtilities?: boolean;
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -74,6 +76,37 @@ const PRESET_META: Record<
       'Teams send-only: send/reply in chats and channels, list chats/teams/channels by name, activity notifications - no message reading',
     requiresOrgMode: true,
     // A write-only preset must not include the generic byte readers.
+    omitUniversalUtilities: true,
+  },
+  // Mail capability presets: the suffix enumerates everything the preset can do
+  // (read / draft / send); bare `mail` remains the full set. No-send boundaries
+  // are token-enforced (the token simply lacks Mail.Send); no-read boundaries
+  // are tool-surface only, since Graph has no write-without-read mail scope -
+  // drafting requires Mail.ReadWrite, which includes Mail.Read.
+  'mail-read': {
+    description:
+      'Mail read-only: list and read messages, folders and attachments; the token holds only Mail.Read',
+  },
+  'mail-read-draft': {
+    description:
+      'Mail read + draft: read messages and write drafts (new, reply, forward) - no sending; the token has no Mail.Send, so the user reviews and sends drafts themselves',
+  },
+  'mail-draft': {
+    description:
+      'Mail draft-only: compose and edit drafts without reading any mail - no listing, no sending. The no-read boundary is the tool surface; the token still holds Mail.ReadWrite',
+    // A no-read tool surface must not include the generic byte readers.
+    omitUniversalUtilities: true,
+  },
+  'mail-draft-send': {
+    description:
+      'Mail draft + send without reading any mail - no listing. The no-read boundary is the tool surface; the token holds Mail.ReadWrite and Mail.Send',
+    // A no-read tool surface must not include the generic byte readers.
+    omitUniversalUtilities: true,
+  },
+  'mail-send': {
+    description:
+      'Mail send-only: send email in one call (send-mail) - no reading, drafting or deleting; the token holds only Mail.Send',
+    // A send-only preset must not include the generic byte readers.
     omitUniversalUtilities: true,
   },
 };

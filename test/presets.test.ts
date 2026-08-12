@@ -136,13 +136,21 @@ describe('utility tools in presets', () => {
 
   // download-bytes and download-bytes-to-file are universal Graph binary readers (base64 vs stream
   // to disk), so no preset - current or future - should be able to find a resource without being
-  // able to read its bytes. teams-write is the one deliberate exception: a send-only preset must
-  // not carry byte readers (its own contract test pins that exclusion).
+  // able to read its bytes. Send-only presets (omitUniversalUtilities: teams-write, mail-send) are
+  // the deliberate exception: they must not carry byte readers (their own contract tests pin that
+  // exclusion).
   it.each(['download-bytes', 'download-bytes-to-file'])(
-    '%s is available in every preset except teams-write (universal binary reader)',
+    '%s is available in every preset that does not omit universal utilities (universal binary reader)',
     (tool) => {
-      for (const preset of namedPresets.filter((name) => name !== 'teams-write')) {
+      for (const preset of namedPresets.filter(
+        (name) => !TOOL_CATEGORIES[name].omitUniversalUtilities
+      )) {
         expect(inPreset(preset, tool), `${tool} missing from ${preset}`).toBe(true);
+      }
+      for (const preset of namedPresets.filter(
+        (name) => TOOL_CATEGORIES[name].omitUniversalUtilities
+      )) {
+        expect(inPreset(preset, tool), `${tool} must not be in ${preset}`).toBe(false);
       }
     }
   );

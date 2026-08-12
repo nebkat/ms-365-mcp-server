@@ -539,7 +539,7 @@ npx @softeria/ms-365-mcp-server --preset mail
 npx @softeria/ms-365-mcp-server --list-presets  # See all available presets
 ```
 
-Available presets: `mail`, `calendar`, `files`, `personal`, `work`, `excel`, `contacts`, `tasks`, `onenote`, `search`, `users`, `outlook`, `onedrive`, `teams`, `teams-write`, `all`
+Available presets: `mail`, `mail-read`, `mail-read-draft`, `mail-draft`, `mail-draft-send`, `mail-send`, `calendar`, `files`, `personal`, `work`, `excel`, `contacts`, `tasks`, `onenote`, `search`, `users`, `outlook`, `onedrive`, `teams`, `teams-write`, `all`
 
 Each endpoint in `endpoints.json` declares which presets it belongs to via a `presets` array, so every preset is an exact tool-name allow-list that never over-matches across apps (e.g. `mail` does not include shared-mailbox tools; those are in `work`). The universal binary reader `download-bytes` is included in every preset except `teams-write`, so whatever an app returns (a file, an attachment, a photo, a recording) can always be fetched; `get-download-url` (a pre-authenticated URL for drive/SharePoint files) rides with the drive-backed presets. So a preset that can find a file can always read its bytes.
 
@@ -557,6 +557,22 @@ The `teams-write` preset is the send-only counterpart to `--read-only`: send in 
 
 ```bash
 npx @softeria/ms-365-mcp-server --org-mode --preset teams-write
+```
+
+The mail capability presets carry the same idea over to email. The suffix enumerates everything the preset can do (`read` / `draft` / `send`); bare `mail` remains the full set:
+
+| Preset            | Can                                          | Token                         | Boundary                     |
+| ----------------- | -------------------------------------------- | ----------------------------- | ---------------------------- |
+| `mail-read`       | list and read messages, folders, attachments | `Mail.Read`                   | token-enforced               |
+| `mail-read-draft` | read + write drafts (new, reply, forward)    | `Mail.ReadWrite`              | no-send is token-enforced    |
+| `mail-draft`      | compose and edit drafts only                 | `Mail.ReadWrite`              | no-read is tool-surface only |
+| `mail-draft-send` | draft + send, no reading                     | `Mail.ReadWrite`, `Mail.Send` | no-read is tool-surface only |
+| `mail-send`       | send email in one call (`send-mail`)         | `Mail.Send`                   | token-enforced               |
+
+The no-send boundaries are enforced by Graph itself — the token simply lacks `Mail.Send`. The no-read boundaries are tool-surface only (CI-pinned by contract tests, byte downloaders excluded), because Graph has no write-without-read mail scope: drafting requires `Mail.ReadWrite`, which includes `Mail.Read`. `mail-read-draft` suits the human-in-the-loop workflow — the agent drafts, you review in Outlook and press send yourself. `mail-send` suits notification and report agents that should be able to tell you things without seeing your mail:
+
+```bash
+npx @softeria/ms-365-mcp-server --preset mail-send
 ```
 
 ## Dynamic Tool Discovery
